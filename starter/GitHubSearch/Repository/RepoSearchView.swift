@@ -9,28 +9,21 @@ struct RepoSearchView: View {
         WithViewStore(self.store) { viewStore in
             NavigationView {
                 VStack {
-                    HStack {
-                        TextField("Search repo",
-                                  text: Binding(
-                                    get: { viewStore.keyword },
-                                    set: {
-                                        viewStore.send(
-                                            .keywordChanged($0))
-                                    }
-                                  )
-                        )
-                        .textFieldStyle(.roundedBorder)
-
-                        Button("Search") {
-                            viewStore.send(.search)
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .padding()
-
+                    Text("Req count : \(viewStore.requestCount)")
+                    
                     List {
                         ForEach(viewStore.searchResults, id: \.self) { Text($0) }
                     }
+                    .searchable(
+                        text: Binding(
+                            get: { viewStore.keyword },
+                            set: {
+                                viewStore.send(
+                                    .keywordChanged($0)
+                                )
+                            }
+                        )
+                    )
                 }
                 .navigationTitle("Github Search")
             }

@@ -9,6 +9,7 @@ struct RepoSearch: ReducerProtocol {
         // keyword와 searchResults 상태 추가하기
         var keyword = ""
         var searchResults = [String]()
+        var requestCount = 0
     }
 
     enum Action: Equatable {
@@ -20,14 +21,25 @@ struct RepoSearch: ReducerProtocol {
     }
 
     @Dependency(\.repoSearchClient) var repoSearchClient
+    @Dependency(\.continuousClock) var clock
+
+    private enum DebounceSearchId {}
+
     func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
         // TODO: 각각의 Action이 발생했을 때 상태는 어떻게 변화해야 하는가?
         switch action {
             case let .keywordChanged(keyword):
                 state.keyword = keyword
-                return .none // side effect 없음
+                return .run { send in
+                    // sleep
+                    try await self.clock.sleep(for: .seconds(1))
+                    await send(.search)
+                }
+                // last task
+                .cancellable(id: DebounceSearchId.self, cancelInFlight: true) // cancelInFlight: 마지막 것만 동작
 
             case .search:
+                state.requestCount += 1
                 // 외부 로직 실행
                 return EffectTask.run { [keyword = state.keyword] send in // concurrently-excuting 코드에서 캡처 불가
                     let result = await TaskResult {

@@ -1,10 +1,16 @@
 import SwiftUI
 
+import ComposableArchitecture
+
 @main
 struct GitHubSearchApp: App {
   var body: some Scene {
     WindowGroup {
-      RepoSearchView()
+      RepoSearchView(
+        store: Store(
+            initialState: RepoSearch.State(),
+            reducer: RepoSearch())
+      )
     }
   }
 }

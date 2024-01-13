@@ -1,43 +1,50 @@
 import SwiftUI
 
+import ComposableArchitecture
+
 struct RepoSearchView: View {
-  @State private var keyword = ""
-  @State private var searchResults: [String] = []
+    let store: StoreOf<RepoSearch>
 
-  private let sampleRepoLists = [
-    "Swift",
-    "SwiftyJSON",
-    "SwiftGuide",
-    "SwiftterSwift",
-  ]
+    var body: some View {
+        WithViewStore(self.store) { viewStore in
+            NavigationView {
+                VStack {
+                    HStack {
+                        TextField("Search repo",
+                                  text: Binding(
+                                    get: { viewStore.keyword },
+                                    set: {
+                                        viewStore.send(
+                                            .keywordChanged($0))
+                                    }
+                                  )
+                        )
+                        .textFieldStyle(.roundedBorder)
 
-  var body: some View {
-    NavigationView {
-      VStack {
-        HStack {
-          TextField("Search repo", text: self.$keyword)
-            .textFieldStyle(.roundedBorder)
+                        Button("Search") {
+                            viewStore.send(.search)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .padding()
 
-          Button("Search") {
-            self.searchResults = self.sampleRepoLists.filter {
-              $0.contains(self.keyword)
+                    List {
+                        ForEach(viewStore.searchResults, id: \.self) { Text($0) }
+                    }
+                }
+                .navigationTitle("Github Search")
             }
-          }
-          .buttonStyle(.borderedProminent)
         }
-        .padding()
-
-        List {
-          ForEach(self.searchResults, id: \.self) { Text($0) }
-        }
-      }
-      .navigationTitle("Github Search")
     }
-  }
 }
 
 struct RepoSearchView_Previews: PreviewProvider {
-  static var previews: some View {
-    RepoSearchView()
-  }
+    static var previews: some View {
+        RepoSearchView(
+            store: Store(
+                initialState: RepoSearch.State(),
+                reducer: RepoSearch()
+            )
+        )
+    }
 }
